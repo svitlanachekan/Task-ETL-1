@@ -48,7 +48,7 @@ for i, col in enumerate(df_origin.columns): # икористуємо enumerateд
 df = df_origin.copy() # робимо копію
 
 
-# 2.1 Видалити непотрібні колонки (за рішенням аналітика)
+# 2.1 Видалити непотрібні стовпчики (за рішенням аналітика)
 if COLUMNS_TO_DROP: # перевіряємо чи у списку щось є
     print("\n--- delete columns in list ---")
     df = df.drop(columns=[col for col in COLUMNS_TO_DROP if col in df.columns], errors='ignore') # звертаємося до копії та видаляємо стовпчики: поверни мені елемент із мого списку; ігноруй помилку, якщо список порожній, то повертати нічого не потрібно
@@ -99,7 +99,77 @@ print("Web cols:", possible_web_cols)
 print("Phone cols:", possible_phone_cols)
 print("Fax cols:", possible_fax_cols)
 
-# Приміняємо зміни
+# Застосовуємо зміни
 for col in df.select_dtypes(include=['object']).columns:
-    df[col] = df[col].apply(standatize_text)
+    df[col] = df[col].apply(standartize_text)
 
+# email    
+for col in possible_email_cols:
+    df[col] = df[col].str.lower()
+    
+# web    
+for col in possible_web_cols:
+    df[col] = df[col].str.lower()
+    
+# clean phone/fax
+def clean_phone(x):
+    if pd.isna(x):
+        return np.nan
+    s = str(x)
+    # plus = "# не був досліджений та считувувся як число, додоємо "
+    # if s.startswith("+"):
+    #     plus = "+"
+# 2 варіант
+    plus = "+" if s.startswith("+") else "" # !!! ЗАПАЬʼЯТАТИ КОРОТКИЙ ВАРІАНТ
+
+    # digits = "" # беремо рядок, розбиваємо, та перевіряємо, чи це число
+    # for ch in s:
+    #     if ch.isdigit():
+    #         digits += ch
+        
+    digits = "".join(ch for ch in s if ch.isdigit())
+
+    if digits == "":
+        return np.nan
+    
+    # 'ljflsjg- 5467' -> igit видаляє, якщо не підоходить до функцції digit
+
+    return plus + digits # прибрали літери
+
+for col in possible_phone_cols + possible_fax_cols:
+    #якщо прибрати всі рисочки, то залишаю номер, якщо відозмінити телеіфони, то треба розуміти , яка країна 
+    df[col] = df[col].apply(clean_phone)
+
+# 2.4. Стандартизувати формат текстових полів
+def title_is_str(s):
+    if pd.isna(x):
+        return np.nan
+    return str(s).title()
+
+city_cols = [c for c in df.columns if c.lower() in ("city", "city_name", "town")]
+
+address_cols = [c for c in df.columns if c.lower() in ("address")]
+
+name_cols = [c for c in df.columns if c.lower() in ("name", "first_name", "second_name", "last name")]
+
+name_title = city_cols + address_cols + name_cols 
+if city_cols + address_cols + name_cols: 
+    for col in name_title:
+        df[col] = df[col].apply(title_if_str)
+    print( '\n--- name of title ---')
+
+else:
+    print("\n--- haven't name ---")
+
+
+
+
+
+
+print(df.head())
+
+
+
+
+
+        
